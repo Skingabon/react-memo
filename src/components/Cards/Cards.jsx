@@ -14,6 +14,9 @@ const STATUS_IN_PROGRESS = "STATUS_IN_PROGRESS";
 // Начало игры: игрок видит все карты в течении нескольких секунд
 const STATUS_PREVIEW = "STATUS_PREVIEW";
 
+// Узнать где можно от ловить ошибку в выборе паре карт (найти это место в коде и вывести в консоль)
+// Найти счетчик открытых карт
+
 function getTimerValue(startDate, endDate) {
   if (!startDate && !endDate) {
     return {
