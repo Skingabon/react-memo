@@ -4,15 +4,17 @@ import { useContext } from "react";
 import { GameContext } from "../../contex/gameContext";
 
 export function SelectLevelPage() {
-  const { handleGameMode } = useContext(GameContext);
-
+  const { handleGameMode, gameMode } = useContext(GameContext);
+  console.log(gameMode);
   return (
     <div className={styles.container}>
       <div className={styles.modal}>
-        <h1 className={styles.title}>
-          Режим "3 ошибки" <input type="checkbox" onClick={handleGameMode} />
-        </h1>
-
+        <div>
+          <label className={styles.gameModeTitle} htmlFor={"mode"}>
+            Режим "3 ошибки"
+          </label>
+          <input id={"mode"} type="checkbox" onChange={handleGameMode} checked={gameMode} />
+        </div>
         <h1 className={styles.title}>Выбери сложность</h1>
         <ul className={styles.levels}>
           <li className={styles.level}>

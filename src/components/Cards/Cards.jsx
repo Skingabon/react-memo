@@ -1,10 +1,11 @@
 import { shuffle } from "lodash";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { generateDeck } from "../../utils/cards";
 import styles from "./Cards.module.css";
-import { EndGameModal } from "../../components/EndGameModal/EndGameModal";
-import { Button } from "../../components/Button/Button";
-import { Card } from "../../components/Card/Card";
+import { EndGameModal } from "../EndGameModal/EndGameModal";
+import { Button } from "../Button/Button";
+import { Card } from "../Card/Card";
+import { GameContext } from "../../contex/gameContext";
 
 // Игра закончилась
 const STATUS_LOST = "STATUS_LOST";
@@ -13,9 +14,6 @@ const STATUS_WON = "STATUS_WON";
 const STATUS_IN_PROGRESS = "STATUS_IN_PROGRESS";
 // Начало игры: игрок видит все карты в течении нескольких секунд
 const STATUS_PREVIEW = "STATUS_PREVIEW";
-
-// Узнать где можно от ловить ошибку в выборе паре карт (найти это место в коде и вывести в консоль)
-// Найти счетчик открытых карт
 
 function getTimerValue(startDate, endDate) {
   if (!startDate && !endDate) {
@@ -44,6 +42,9 @@ function getTimerValue(startDate, endDate) {
  * previewSeconds - сколько секунд пользователь будет видеть все карты открытыми до начала игры
  */
 export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
+  const { gameMode } = useContext(GameContext);
+  const [lives, setLives] = useState(gameMode ? 3 : 1);
+
   // В cards лежит игровое поле - массив карт и их состояние открыта\закрыта
   const [cards, setCards] = useState([]);
   // Текущий статус игры
@@ -66,12 +67,14 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
   }
   function startGame() {
     const startDate = new Date();
+    setLives(3);
     setGameEndDate(null);
     setGameStartDate(startDate);
     setTimer(getTimerValue(startDate, null));
     setStatus(STATUS_IN_PROGRESS);
   }
   function resetGame() {
+    setLives(3);
     setGameStartDate(null);
     setGameEndDate(null);
     setTimer(getTimerValue(null, null));
@@ -119,25 +122,41 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
     const openCardsWithoutPair = openCards.filter(card => {
       const sameCards = openCards.filter(openCard => card.suit === openCard.suit && card.rank === openCard.rank);
 
-      if (sameCards.length < 2) {
-        return true;
-      }
-
-      return false;
+      return sameCards.length < 2;
     });
 
     const playerLost = openCardsWithoutPair.length >= 2;
 
     // "Игрок проиграл", т.к на поле есть две открытые карты без пары
     if (playerLost) {
-      finishGame(STATUS_LOST);
-      return;
+      if (!gameMode) {
+        finishGame(STATUS_LOST);
+        return;
+      }
+      setLives(lives - 1);
+      nextCards.map(el => {
+        if (openCardsWithoutPair.some(openCard => openCard.id === el.id)) {
+          // if (el.open) {
+          setTimeout(() => {
+            setCards(prev => {
+              return prev.map(card => (el.id === card.id ? { ...card, open: false } : card));
+            });
+          }, 500);
+          // }
+        }
+      });
     }
 
     // ... игра продолжается
   };
 
   const isGameEnded = status === STATUS_LOST || status === STATUS_WON;
+
+  useEffect(() => {
+    if (lives === 0) {
+      finishGame(STATUS_LOST);
+    }
+  }, [lives]);
 
   // Игровой цикл
   useEffect(() => {
@@ -212,6 +231,8 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
           />
         ))}
       </div>
+
+      {gameMode && <p className={styles.liveSpan}>Осталось попыток: {lives}</p>}
 
       {isGameEnded ? (
         <div className={styles.modalContainer}>
