@@ -17,5 +17,5 @@ export const GameProvider = ({ children }) => {
     localStorage.setItem("gameMode", JSON.stringify(!gameMode));
   };
 
-  return <GameContext.Provider value={{ handleGameMode, gameMode, setGameMode }}>{children}</GameContext.Provider>;
+  return <GameContext.Provider value={{ handleGameMode, gameMode }}>{children}</GameContext.Provider>;
 };

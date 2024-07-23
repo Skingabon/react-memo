@@ -5,7 +5,6 @@ import { GameContext } from "../../contex/gameContext";
 
 export function SelectLevelPage() {
   const { handleGameMode, gameMode } = useContext(GameContext);
-  console.log(gameMode);
   return (
     <div className={styles.container}>
       <div className={styles.modal}>

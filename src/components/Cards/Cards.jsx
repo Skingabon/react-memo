@@ -97,7 +97,6 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
     // Игровое поле после открытия кликнутой карты
     // Если кликаем по карте с другим ID, то открываем кликнутую карту
     const nextCards = cards.map(card => {
-      console.log(card.id);
       if (card.id !== clickedCard.id) {
         return card;
       }
@@ -126,7 +125,7 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
     // Кладу в переменную то что нашел в массиве открытых карт на поле. По условию что в открытых картах есть карта без пары
     const openCardsWithoutPair = openCards.filter(card => {
       const sameCards = openCards.filter(openCard => card.suit === openCard.suit && card.rank === openCard.rank);
-      console.log(sameCards);
+
       return sameCards.length < 2;
     });
     // кладу в переменную найденные 2-е открытые карты без пары
