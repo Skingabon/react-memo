@@ -15,6 +15,7 @@ const STATUS_IN_PROGRESS = "STATUS_IN_PROGRESS";
 // Начало игры: игрок видит все карты в течении нескольких секунд
 const STATUS_PREVIEW = "STATUS_PREVIEW";
 
+// Тут я думаю выставляется время 0 перед стартом игры и время затраченное на игру в итоге и фремя реальное в игре
 function getTimerValue(startDate, endDate) {
   if (!startDate && !endDate) {
     return {
@@ -94,11 +95,13 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
       return;
     }
     // Игровое поле после открытия кликнутой карты
+    // Если кликаем по карте с другим ID, то открываем кликнутую карту
     const nextCards = cards.map(card => {
+      console.log(card.id);
       if (card.id !== clickedCard.id) {
         return card;
       }
-
+      //  меняю значение свойства объекта card (открытой карты) на тру
       return {
         ...card,
         open: true,
@@ -106,7 +109,7 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
     });
 
     setCards(nextCards);
-
+    // Проверяю что все карты открыты (метод every смотрит все ли карты в массиве открыты)
     const isPlayerWon = nextCards.every(card => card.open);
 
     // Победа - все карты на поле открыты
@@ -116,33 +119,36 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
     }
 
     // Открытые карты на игровом поле
+    // Кладу в переменную кликнутую открытую карту найденную в массиве карт на поле
     const openCards = nextCards.filter(card => card.open);
 
     // Ищем открытые карты, у которых нет пары среди других открытых
+    // Кладу в переменную то что нашел в массиве открытых карт на поле. По условию что в открытых картах есть карта без пары
     const openCardsWithoutPair = openCards.filter(card => {
       const sameCards = openCards.filter(openCard => card.suit === openCard.suit && card.rank === openCard.rank);
-
+      console.log(sameCards);
       return sameCards.length < 2;
     });
-
+    // кладу в переменную найденные 2-е открытые карты без пары
     const playerLost = openCardsWithoutPair.length >= 2;
 
     // "Игрок проиграл", т.к на поле есть две открытые карты без пары
+    // Если есть 2 карты без пары и режим игры 3 попытки отключет - то игру заканчикаем - игрок програл. Иначе с включенным режимом "3 попытки" уменьшаем на 1 попытку
     if (playerLost) {
       if (!gameMode) {
         finishGame(STATUS_LOST);
         return;
       }
       setLives(lives - 1);
+      // Если есть совпадение кликнутой карты с картой из массива открытых карт без ПАРЫЫЫЫЫ
       nextCards.map(el => {
         if (openCardsWithoutPair.some(openCard => openCard.id === el.id)) {
-          // if (el.open) {
           setTimeout(() => {
             setCards(prev => {
+              // не догоняю пока почемй тут open: false. Я же кликнул карту ID который совпадает с картой без пары из массива открытых карт
               return prev.map(card => (el.id === card.id ? { ...card, open: false } : card));
             });
           }, 500);
-          // }
         }
       });
     }
@@ -150,35 +156,42 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
     // ... игра продолжается
   };
 
+  //  Тут чтото происходит.. кладу в переменную или такой или такой статус
   const isGameEnded = status === STATUS_LOST || status === STATUS_WON;
 
+  // жизней 0 в режиме 3 попытки?  - конец игры
   useEffect(() => {
     if (lives === 0) {
       finishGame(STATUS_LOST);
     }
   }, [lives]);
 
-  // Игровой цикл
+  // Игровой цикл !ё!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
   useEffect(() => {
     // В статусах кроме превью доп логики не требуется
+    //  ТУт если статус не превью (все карты НЕ открыты) то ретерн
     if (status !== STATUS_PREVIEW) {
       return;
     }
 
     // В статусе превью мы
+    // Это когда такой алерт выскочит??? если пк окроет сколько карт в какой игре?
     if (pairsCount > 36) {
       alert("Столько пар сделать невозможно");
       return;
     }
 
+    // мешаю карты для 10 пар
     setCards(() => {
       return shuffle(generateDeck(pairsCount, 10));
     });
 
+    // показываю карты на 50 сек
     const timerId = setTimeout(() => {
       startGame();
-    }, previewSeconds * 1000);
-
+    }, previewSeconds * 500);
+    // чищу таймер
     return () => {
       clearTimeout(timerId);
     };
