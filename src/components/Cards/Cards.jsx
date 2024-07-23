@@ -100,7 +100,7 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
       if (card.id !== clickedCard.id) {
         return card;
       }
-      //  меняю значение свойства объекта card (открытой карты) на тру
+      //  меняю значение свойства объекта card (кликнутой карты) на тру
       return {
         ...card,
         open: true,
@@ -118,9 +118,11 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
     }
 
     // Открытые карты на игровом поле
-    // Кладу в переменную кликнутую открытую карту найденную в массиве карт на поле
+    // Кладу в переменную все открытые карты найденные в массиве карт из nextCard ()!!!!!!!!!!!!!!!!!!!!
     const openCards = nextCards.filter(card => card.open);
-
+    if (openCards.length === 1) {
+      return;
+    }
     // Ищем открытые карты, у которых нет пары среди других открытых
     // Кладу в переменную то что нашел в массиве открытых карт на поле. По условию что в открытых картах есть карта без пары
     const openCardsWithoutPair = openCards.filter(card => {
@@ -139,23 +141,19 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
         return;
       }
       setLives(lives - 1);
-      // Если есть совпадение кликнутой карты с картой из массива открытых карт без ПАРЫЫЫЫЫ
+      // Если есть совпадение ID кликнутой карты с картой из массива открытых карт без ПАРЫЫЫЫЫ
       nextCards.map(el => {
-        if (openCardsWithoutPair.some(openCard => openCard.id === el.id)) {
-          setTimeout(() => {
-            setCards(prev => {
-              // не догоняю пока почемй тут open: false. Я же кликнул карту ID который совпадает с картой без пары из массива открытых карт
-              return prev.map(card => (el.id === card.id ? { ...card, open: false } : card));
-            });
-          }, 500);
-        }
+        setTimeout(() => {
+          setCards(prev => {
+            // Я нашел неправильную пару и делаю закрытие карты - open: false
+            return prev.map(card => (el.id === card.id ? { ...card, open: false } : card));
+          });
+        }, 500);
       });
     }
-
-    // ... игра продолжается
   };
 
-  //  Тут чтото происходит.. кладу в переменную или такой или такой статус
+  //  тут смоорю какой реально смтатус в игре и еперменно присваиваю либо тру ( статус-лост либо фалс - статус вон)
   const isGameEnded = status === STATUS_LOST || status === STATUS_WON;
 
   // жизней 0 в режиме 3 попытки?  - конец игры
@@ -186,10 +184,10 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
       return shuffle(generateDeck(pairsCount, 10));
     });
 
-    // показываю карты на 50 сек
+    // показываю карты на 5 сек перед началом игры
     const timerId = setTimeout(() => {
       startGame();
-    }, previewSeconds * 500);
+    }, previewSeconds * 1000);
     // чищу таймер
     return () => {
       clearTimeout(timerId);
