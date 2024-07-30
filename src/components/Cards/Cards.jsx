@@ -1,10 +1,11 @@
 import { shuffle } from "lodash";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { generateDeck } from "../../utils/cards";
 import styles from "./Cards.module.css";
-import { EndGameModal } from "../../components/EndGameModal/EndGameModal";
-import { Button } from "../../components/Button/Button";
-import { Card } from "../../components/Card/Card";
+import { EndGameModal } from "../EndGameModal/EndGameModal";
+import { Button } from "../Button/Button";
+import { Card } from "../Card/Card";
+import { GameContext } from "../../contex/gameContext";
 
 // Игра закончилась
 const STATUS_LOST = "STATUS_LOST";
@@ -14,6 +15,7 @@ const STATUS_IN_PROGRESS = "STATUS_IN_PROGRESS";
 // Начало игры: игрок видит все карты в течении нескольких секунд
 const STATUS_PREVIEW = "STATUS_PREVIEW";
 
+// Тут я думаю выставляется время 0 перед стартом игры и время затраченное на игру в итоге и фремя реальное в игре
 function getTimerValue(startDate, endDate) {
   if (!startDate && !endDate) {
     return {
@@ -41,6 +43,9 @@ function getTimerValue(startDate, endDate) {
  * previewSeconds - сколько секунд пользователь будет видеть все карты открытыми до начала игры
  */
 export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
+  const { gameMode } = useContext(GameContext);
+  const [lives, setLives] = useState(gameMode ? 3 : 1);
+
   // В cards лежит игровое поле - массив карт и их состояние открыта\закрыта
   const [cards, setCards] = useState([]);
   // Текущий статус игры
@@ -63,12 +68,14 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
   }
   function startGame() {
     const startDate = new Date();
+    setLives(3);
     setGameEndDate(null);
     setGameStartDate(startDate);
     setTimer(getTimerValue(startDate, null));
     setStatus(STATUS_IN_PROGRESS);
   }
   function resetGame() {
+    setLives(3);
     setGameStartDate(null);
     setGameEndDate(null);
     setTimer(getTimerValue(null, null));
@@ -88,11 +95,12 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
       return;
     }
     // Игровое поле после открытия кликнутой карты
+    // Если кликаем по карте с другим ID, то открываем кликнутую карту
     const nextCards = cards.map(card => {
       if (card.id !== clickedCard.id) {
         return card;
       }
-
+      //  меняю значение свойства объекта card (кликнутой карты) на тру
       return {
         ...card,
         open: true,
@@ -100,7 +108,7 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
     });
 
     setCards(nextCards);
-
+    // Проверяю что все карты открыты (метод every смотрит все ли карты в массиве открыты)
     const isPlayerWon = nextCards.every(card => card.open);
 
     // Победа - все карты на поле открыты
@@ -110,53 +118,77 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
     }
 
     // Открытые карты на игровом поле
+    // Кладу в переменную все открытые карты найденные в массиве карт из nextCard ()!!!!!!!!!!!!!!!!!!!!
     const openCards = nextCards.filter(card => card.open);
-
+    if (openCards.length === 1) {
+      return;
+    }
     // Ищем открытые карты, у которых нет пары среди других открытых
+    // Кладу в переменную то что нашел в массиве открытых карт на поле. По условию что в открытых картах есть карта без пары
     const openCardsWithoutPair = openCards.filter(card => {
       const sameCards = openCards.filter(openCard => card.suit === openCard.suit && card.rank === openCard.rank);
 
-      if (sameCards.length < 2) {
-        return true;
-      }
-
-      return false;
+      return sameCards.length < 2;
     });
-
+    // кладу в переменную найденные 2-е открытые карты без пары
     const playerLost = openCardsWithoutPair.length >= 2;
 
     // "Игрок проиграл", т.к на поле есть две открытые карты без пары
+    // Если есть 2 карты без пары и режим игры 3 попытки отключет - то игру заканчикаем - игрок програл. Иначе с включенным режимом "3 попытки" уменьшаем на 1 попытку
     if (playerLost) {
-      finishGame(STATUS_LOST);
-      return;
+      if (!gameMode) {
+        finishGame(STATUS_LOST);
+        return;
+      }
+      setLives(lives - 1);
+      // Если есть совпадение ID кликнутой карты с картой из массива открытых карт без ПАРЫЫЫЫЫ
+      nextCards.map(el => {
+        setTimeout(() => {
+          setCards(prev => {
+            // Я нашел неправильную пару и делаю закрытие карты - open: false
+            return prev.map(card => (el.id === card.id ? { ...card, open: false } : card));
+          });
+        }, 500);
+      });
     }
-
-    // ... игра продолжается
   };
 
+  //  тут смоорю какой реально смтатус в игре и еперменно присваиваю либо тру ( статус-лост либо фалс - статус вон)
   const isGameEnded = status === STATUS_LOST || status === STATUS_WON;
 
-  // Игровой цикл
+  // жизней 0 в режиме 3 попытки?  - конец игры
+  useEffect(() => {
+    if (lives === 0) {
+      finishGame(STATUS_LOST);
+    }
+  }, [lives]);
+
+  // Игровой цикл !ё!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
   useEffect(() => {
     // В статусах кроме превью доп логики не требуется
+    //  ТУт если статус не превью (все карты НЕ открыты) то ретерн
     if (status !== STATUS_PREVIEW) {
       return;
     }
 
     // В статусе превью мы
+    // Это когда такой алерт выскочит??? если пк окроет сколько карт в какой игре?
     if (pairsCount > 36) {
       alert("Столько пар сделать невозможно");
       return;
     }
 
+    // мешаю карты для 10 пар
     setCards(() => {
       return shuffle(generateDeck(pairsCount, 10));
     });
 
+    // показываю карты на 5 сек перед началом игры
     const timerId = setTimeout(() => {
       startGame();
     }, previewSeconds * 1000);
-
+    // чищу таймер
     return () => {
       clearTimeout(timerId);
     };
@@ -209,6 +241,8 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
           />
         ))}
       </div>
+
+      {gameMode && <p className={styles.liveSpan}>Осталось попыток: {lives}</p>}
 
       {isGameEnded ? (
         <div className={styles.modalContainer}>

@@ -78,9 +78,13 @@
   perspective: 1000;
 }
 
-.flipContainer:hover .flipper {
+.flipper {
   transition: 0.2s;
-  transform: rotateY(35deg);
+}
+
+.flipContainer:hover .flipper {
+  /*transform: rotateY(35deg);*/
+  transform: translateX(3px);
 }
 
 .flipContainer.flip .flipper {

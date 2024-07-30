@@ -5,6 +5,7 @@
     "camelcase": ["error", { "properties": "never" }],
     "prettier/prettier": "error",
     "eqeqeq": ["error", "always"],
-    "no-unused-vars": ["error"]
+    "no-unused-vars": ["error"],
+    "array-callback-return": "off"
   }
 }

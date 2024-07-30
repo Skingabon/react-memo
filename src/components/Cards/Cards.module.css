@@ -55,6 +55,13 @@
   line-height: 18px;
 }
 
+.liveSpan {
+  font-size: 18px;
+  line-height: 18px;
+color: #ffffff;
+margin-top: 14px;
+}
+
 .timerValue {
   text-align: right;
 }
