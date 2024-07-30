@@ -10,7 +10,7 @@ export const getLocalStorage = () => {
 };
 
 export const GameProvider = ({ children }) => {
-  const [gameMode, setGameMode] = useState(getLocalStorage());
+  const [gameMode, setGameMode] = useState(getLocalStorage() || false);
 
   const handleGameMode = () => {
     setGameMode(!gameMode);
